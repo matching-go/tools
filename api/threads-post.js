@@ -16,20 +16,29 @@ export default async function handler(req, res) {
     let creationId;
 
     if (imageUrls && imageUrls.length > 0) {
+      // URLの形式チェック
+      for (const url of imageUrls) {
+        if (!url.startsWith('https://')) {
+          throw new Error('画像URLはhttpsである必要があります: ' + url);
+        }
+      }
+
       if (imageUrls.length === 1) {
-        // 画像1枚
+        // 画像1枚 - textは別フィールドとして渡す
+        const createBody = {
+          media_type: 'IMAGE',
+          image_url: imageUrls[0],
+          access_token: token
+        };
+        if (text) createBody.text = text;
+
         const createRes = await fetch(`https://graph.threads.net/v1.0/${me.id}/threads`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            media_type: 'IMAGE',
-            image_url: imageUrls[0],
-            text,
-            access_token: token
-          })
+          body: JSON.stringify(createBody)
         });
         const created = await createRes.json();
-        if (!created.id) throw new Error('Create failed: ' + JSON.stringify(created));
+        if (!created.id) throw new Error('画像投稿失敗: ' + JSON.stringify(created));
         creationId = created.id;
 
       } else {
