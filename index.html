@@ -1944,9 +1944,11 @@ async function postNow(btn, text, postIdx) {
     if (postIdx) {
       btn.textContent = '画像アップ中...';
       imageUrls = await uploadImages(postIdx);
+      console.log('uploadedUrls:', imageUrls);
     }
 
     btn.textContent = '投稿中...';
+    console.log('posting with imageUrls:', imageUrls);
     await postToThreadsAPI(text, token, imageUrls);
     btn.textContent = '✓ 投稿完了！';
     btn.style.background = 'linear-gradient(135deg, #6ee7b7, #34d399)';
