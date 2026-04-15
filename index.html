@@ -1576,9 +1576,7 @@ async function saveToken() {
 
 // Threads API投稿（Vercelプロキシ経由・画像対応）
 async function postToThreadsAPI(text, token, imageUrls = []) {
-  const apiUrl = window.location.hostname === 'localhost' || window.location.protocol === 'file:'
-    ? 'https://tools-o8fh.vercel.app/api/threads-post'
-    : '/api/threads-post';
+  const apiUrl = 'https://tools-o8fh.vercel.app/api/threads-post';
 
   const res = await fetch(apiUrl, {
     method: 'POST',
@@ -2020,9 +2018,7 @@ async function uploadImages(postIdx) {
     if (img.file) {
       if (statusEl) statusEl.textContent = `アップロード中... (${i+1}/${imgs.length})`;
       try {
-        const apiUrl = window.location.hostname === 'localhost' || window.location.protocol === 'file:'
-          ? 'https://tools-o8fh.vercel.app/api/upload-image'
-          : '/api/upload-image';
+        const apiUrl = 'https://tools-o8fh.vercel.app/api/upload-image';
         const res = await fetch(apiUrl, {
           method: 'POST',
           headers: { 'Content-Type': img.file.type },
@@ -2145,9 +2141,7 @@ async function confirmSchedule() {
 
   try {
     // Vercel KVにスケジュールを保存（PCオフでも動作）
-    const apiUrl = window.location.hostname === 'localhost' || window.location.protocol === 'file:'
-      ? 'https://tools-o8fh.vercel.app/api/schedule'
-      : '/api/schedule';
+    const apiUrl = 'https://tools-o8fh.vercel.app/api/schedule';
 
     const res = await fetch(apiUrl, {
       method: 'POST',
@@ -2288,9 +2282,7 @@ async function saveAutoConfig() {
   try { localStorage.setItem('gsp_auto_config', JSON.stringify(autoConfig)); } catch(e) {}
 
   try {
-    const apiUrl = window.location.protocol === 'file:'
-      ? 'https://tools-o8fh.vercel.app/api/save-config'
-      : '/api/save-config';
+    const apiUrl = 'https://tools-o8fh.vercel.app/api/save-config';
 
     const res = await fetch(apiUrl, {
       method: 'POST',
