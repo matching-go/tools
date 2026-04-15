@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
   if (!KV_URL || !KV_TOKEN) {
-    res.status(500).json({ error: 'KV not configured' });
+    res.status(500).json({ error: 'KV not configured', url: !!KV_URL, token: !!KV_TOKEN });
     return;
   }
 
@@ -16,17 +16,20 @@ export default async function handler(req, res) {
     const { config } = req.body;
     if (!config) { res.status(400).json({ error: 'config required' }); return; }
 
-    // KVに保存
-    await fetch(`${KV_URL}/set/auto_post_config`, {
+    // Upstash Redis REST API形式
+    const kvRes = await fetch(`${KV_URL}/set/auto_post_config`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${KV_TOKEN}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ value: JSON.stringify(config) })
+      body: JSON.stringify([JSON.stringify(config)])
     });
 
-    res.status(200).json({ ok: true });
+    const kvData = await kvRes.json();
+    console.log('KV response:', kvData);
+
+    res.status(200).json({ ok: true, kv: kvData });
   } catch(e) {
     res.status(500).json({ ok: false, error: e.message });
   }
