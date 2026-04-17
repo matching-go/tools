@@ -13,21 +13,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // bodyを手動でパース
-    let body = req.body;
-    if (typeof body === 'string') {
-      body = JSON.parse(body);
-    }
-    if (!body) {
-      const chunks = [];
-      for await (const chunk of req) chunks.push(chunk);
-      body = JSON.parse(Buffer.concat(chunks).toString());
-    }
-
-    const config = body.config;
+    const { config } = req.body;
     if (!config) { res.status(400).json({ error: 'config required' }); return; }
 
-    // Upstash Redis REST API
+    // Upstash Redis REST API - 正しい形式で保存
     const kvRes = await fetch(`${KV_URL}/set/auto_post_config`, {
       method: 'POST',
       headers: {
@@ -38,7 +27,11 @@ export default async function handler(req, res) {
     });
 
     const kvData = await kvRes.json();
-    res.status(200).json({ ok: true, kv: kvData });
+    if (kvData.result === 'OK') {
+      res.status(200).json({ ok: true });
+    } else {
+      res.status(500).json({ ok: false, error: JSON.stringify(kvData) });
+    }
   } catch(e) {
     res.status(500).json({ ok: false, error: e.message });
   }

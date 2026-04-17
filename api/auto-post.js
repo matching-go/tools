@@ -104,7 +104,14 @@ export default async function handler(req, res) {
   let todaySchedule = await kvGet(`schedule_${todayKey}`);
   if (!todaySchedule) {
     todaySchedule = generateTodaySchedule(autoConfig, todayKey);
-    // 翌日3時まで保持
+    await kvSet(`schedule_${todayKey}`, todaySchedule, 27 * 60 * 60);
+  }
+  // 二重JSON化対応
+  if (Array.isArray(todaySchedule) && typeof todaySchedule[0] === 'string') {
+    todaySchedule = JSON.parse(todaySchedule[0]);
+  }
+  if (!Array.isArray(todaySchedule)) {
+    todaySchedule = generateTodaySchedule(autoConfig, todayKey);
     await kvSet(`schedule_${todayKey}`, todaySchedule, 27 * 60 * 60);
   }
 
