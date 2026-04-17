@@ -89,11 +89,15 @@ export default async function handler(req, res) {
   const todayKey = `${jst.getUTCFullYear()}-${jst.getUTCMonth()+1}-${jst.getUTCDate()}`;
   const situation = SITUATION_BY_HOUR[jstHour] || '本音・ひとりごと';
 
-  // 自動投稿設定取得
-  const autoConfig = await kvGet('auto_post_config');
+  // 自動投稿設定取得（二重JSON化に対応）
+  let autoConfig = await kvGet('auto_post_config');
   if (!autoConfig) {
     res.status(200).json({ ok: true, message: '設定なし' });
     return;
+  }
+  // 二重JSON化の場合はパース
+  if (Array.isArray(autoConfig) && typeof autoConfig[0] === 'string') {
+    autoConfig = JSON.parse(autoConfig[0]);
   }
 
   // 今日のランダムスケジュール取得（なければ生成）
