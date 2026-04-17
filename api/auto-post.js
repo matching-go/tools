@@ -30,17 +30,34 @@ function seededRand(seed) {
 
 export default async function handler(req, res) {
   const authHeader = req.headers['authorization'];
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const cronSecret = process.env.CRON_SECRET || 'girlsns-secret-2024';
+  if (authHeader !== `Bearer ${cronSecret}`) {
     res.status(401).json({ error: 'Unauthorized' });
     return;
   }
 
   const KV_URL = process.env.KV_REST_API_URL;
   const KV_TOKEN = process.env.KV_REST_API_TOKEN;
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_API_KEY;
 
-  if (!KV_URL || !KV_TOKEN || !ANTHROPIC_KEY) {
-    res.status(500).json({ error: 'Missing env vars' });
+  if (!KV_URL || !KV_TOKEN) {
+    res.status(500).json({ error: 'Missing KV env vars' });
+    return;
+  }
+
+  // AnthropicキーをKVから取得（環境変数になければKVから読む）
+  let ANTHROPIC_KEY = process.env.ANTHROPIC_KEY || process.env.ANTHROPIC_API_KEY;
+  if (!ANTHROPIC_KEY) {
+    try {
+      const keyRes = await fetch(`${KV_URL}/get/anthropic_key`, {
+        headers: { Authorization: `Bearer ${KV_TOKEN}` }
+      });
+      const keyData = await keyRes.json();
+      ANTHROPIC_KEY = keyData.result;
+    } catch(e) {}
+  }
+
+  if (!ANTHROPIC_KEY) {
+    res.status(500).json({ error: 'Missing ANTHROPIC_KEY' });
     return;
   }
 
