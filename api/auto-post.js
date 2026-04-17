@@ -202,14 +202,15 @@ export default async function handler(req, res) {
 function generateTodaySchedule(autoConfig, todayKey) {
   const dateSeed = todayKey.split('-').reduce((a, b) => a * 100 + parseInt(b), 0);
 
+  // 全キャラの投稿時刻を一元管理して重複を防ぐ
+  const usedTimes = new Set();
+
   return autoConfig.map((c, i) => {
     if (!c.enabled || !c.token) {
       return { ...c, charIndex: i, enabled: false, postTimes: [] };
     }
 
     const count = c.dailyCount || 4;
-
-    // 6時〜23時の範囲をcount等分してランダムな時刻を生成
     const startHour = 6;
     const endHour = 23;
     const range = endHour - startHour;
@@ -218,11 +219,19 @@ function generateTodaySchedule(autoConfig, todayKey) {
     const postTimes = Array.from({ length: count }, (_, si) => {
       const slotStart = startHour + slotSize * si;
       const slotEnd = startHour + slotSize * (si + 1);
-      const totalMinStart = slotStart * 60;
-      const totalMinEnd = slotEnd * 60;
-      const totalMin = totalMinStart + Math.floor(
-        seededRand(dateSeed + i * 37 + si * 131) * (totalMinEnd - totalMinStart)
-      );
+      const totalMinStart = Math.ceil(slotStart * 60);
+      const totalMinEnd = Math.floor(slotEnd * 60);
+
+      // 重複しない時刻を探す（最大10回試行）
+      let totalMin, attempts = 0;
+      do {
+        totalMin = totalMinStart + Math.floor(
+          seededRand(dateSeed + i * 37 + si * 131 + attempts * 7) * (totalMinEnd - totalMinStart)
+        );
+        attempts++;
+      } while (usedTimes.has(totalMin) && attempts < 10);
+
+      usedTimes.add(totalMin);
       return {
         hour: Math.floor(totalMin / 60) % 24,
         minute: totalMin % 60
