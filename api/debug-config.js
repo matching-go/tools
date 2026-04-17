@@ -4,7 +4,6 @@ export default async function handler(req, res) {
   const KV_URL = process.env.KV_REST_API_URL;
   const KV_TOKEN = process.env.KV_REST_API_TOKEN;
 
-  // KVからanthropicキーとauto_post_configを取得
   let anthropicKey = 'NOT SET';
   let autoConfig = null;
 
@@ -19,7 +18,14 @@ export default async function handler(req, res) {
       headers: { Authorization: `Bearer ${KV_TOKEN}` }
     });
     const d2 = await r2.json();
-    autoConfig = d2.result ? JSON.parse(d2.result) : null;
+    
+    // 二重JSON化に対応
+    if (d2.result) {
+      let val = d2.result;
+      if (typeof val === 'string') val = JSON.parse(val);
+      if (Array.isArray(val) && typeof val[0] === 'string') val = JSON.parse(val[0]);
+      autoConfig = val;
+    }
   } catch(e) {}
 
   res.status(200).json({
