@@ -120,9 +120,9 @@ export default async function handler(req, res) {
   for (const charSched of todaySchedule) {
     if (!charSched.enabled || !charSched.token) continue;
 
-    // 今の時刻と一致するか（±1分の誤差許容）
+    // 今の時刻と完全一致するか確認
     const matchingPost = charSched.postTimes.find(t =>
-      t.hour === jstHour && Math.abs(t.minute - jstMinute) <= 1
+      t.hour === jstHour && t.minute === jstMinute
     );
     if (!matchingPost) continue;
 
